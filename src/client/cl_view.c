@@ -36,6 +36,8 @@ cvar_t *cl_testparticles;
 cvar_t *cl_testentities;
 cvar_t *cl_testlights;
 cvar_t *cl_testblend;
+cvar_t *cl_stereo_separation;
+cvar_t *cl_stereo_margin;
 
 cvar_t *cl_stats;
 
