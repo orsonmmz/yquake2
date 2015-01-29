@@ -663,7 +663,7 @@ R_SetupFrame(void)
 				vid.height - r_newrefdef.height - r_newrefdef.y,
 				r_newrefdef.width, r_newrefdef.height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glClearColor(1, 0, 0.5, 0.5);
+		glClearColor(0, 0, 0, 0);
 		glDisable(GL_SCISSOR_TEST);
 	}
 }
@@ -1447,7 +1447,6 @@ R_SetPalette(const unsigned char *palette)
 
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glClearColor(1, 0, 0.5, 0.5);
 }
 
 /* R_DrawBeam */

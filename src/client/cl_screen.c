@@ -1463,10 +1463,10 @@ SCR_UpdateScreen(void)
 		numframes = 1;
 	}
 
+	R_BeginFrame(0);
+
 	for (i = 0; i < numframes; i++)
 	{
-		R_BeginFrame(0);
-
 		if (scr_draw_loading == 2)
 		{
 			/* loading plaque over black screen */
