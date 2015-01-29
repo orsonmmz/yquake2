@@ -263,7 +263,7 @@ SCR_DrawCenterString(void)
 
 	if (scr_center_lines <= 4)
 	{
-		y = (viddef.height * 0.35) / scale;
+		y = (scr_vrect.height * 0.35) / scale;
 	}
 
 	else
@@ -282,7 +282,7 @@ SCR_DrawCenterString(void)
 			}
 		}
 
-		x = ((viddef.width - l * 8) / 2) / scale;
+		x = ((scr_vrect.width - l * 8) / 2) / scale;
 		SCR_AddDirtyPoint(x, y);
 
 		for (j = 0; j < l; j++, x += 8)
@@ -491,7 +491,7 @@ SCR_DrawPause(void)
 	}
 
 	Draw_GetPicSize(&w, &h, "pause");
-	Draw_PicScaled((viddef.width - w * scale) / 2, viddef.height / 2 + 8 * scale, "pause", scale);
+	Draw_PicScaled(scr_vrect.x + (scr_vrect.width - w * scale) / 2, scr_vrect.height / 2 + 8 * scale, "pause", scale);
 }
 
 void
@@ -507,7 +507,7 @@ SCR_DrawLoading(void)
 
 	scr_draw_loading = false;
 	Draw_GetPicSize(&w, &h, "loading");
-	Draw_PicScaled((viddef.width - w * scale) / 2, (viddef.height - h * scale) / 2, "loading", scale);
+	Draw_PicScaled(scr_vrect.x + (scr_vrect.width - w * scale) / 2, (scr_vrect.height - h * scale) / 2, "loading", scale);
 }
 
 /*
@@ -562,7 +562,7 @@ SCR_DrawConsole(void)
 	{
 		/* connected, but can't render */
 		Con_DrawConsole(0.5);
-		Draw_Fill(0, viddef.height / 2, viddef.width, viddef.height / 2, 0);
+		Draw_Fill(0, scr_vrect.height / 2, scr_vrect.x + scr_vrect.width, scr_vrect.height / 2, 0);
 		return;
 	}
 
@@ -717,7 +717,7 @@ void
 SCR_DirtyScreen(void)
 {
 	SCR_AddDirtyPoint(0, 0);
-	SCR_AddDirtyPoint(viddef.width - 1, viddef.height - 1);
+	SCR_AddDirtyPoint(scr_vrect.width - 1, scr_vrect.height - 1);
 }
 
 /*
@@ -781,7 +781,7 @@ SCR_TileClear(void)
 	scr_dirty.y2 = -9999;
 
 	/* don't bother with anything convered by the console */
-	top = (int)(scr_con_current * viddef.height);
+	top = (int)(scr_con_current * scr_vrect.height);
 
 	if (top >= clear.y1)
 	{
@@ -1065,21 +1065,21 @@ SCR_ExecuteLayoutString(char *s)
 		if (!strcmp(token, "xl"))
 		{
 			token = COM_Parse(&s);
-			x = scale*(int)strtol(token, (char **)NULL, 10);
+			x = scr_vrect.x + scale*(int)strtol(token, (char **)NULL, 10);
 			continue;
 		}
 
 		if (!strcmp(token, "xr"))
 		{
 			token = COM_Parse(&s);
-			x = viddef.width + scale*(int)strtol(token, (char **)NULL, 10);
+			x = scr_vrect.x + scr_vrect.width + scale*(int)strtol(token, (char **)NULL, 10);
 			continue;
 		}
 
 		if (!strcmp(token, "xv"))
 		{
 			token = COM_Parse(&s);
-			x = viddef.width / 2 - scale*160 + scale*(int)strtol(token, (char **)NULL, 10);
+			x = scr_vrect.x + scr_vrect.width / 2 - scale*160 + scale*(int)strtol(token, (char **)NULL, 10);
 			continue;
 		}
 
@@ -1093,14 +1093,14 @@ SCR_ExecuteLayoutString(char *s)
 		if (!strcmp(token, "yb"))
 		{
 			token = COM_Parse(&s);
-			y = viddef.height + scale*(int)strtol(token, (char **)NULL, 10);
+			y = scr_vrect.height + scale*(int)strtol(token, (char **)NULL, 10);
 			continue;
 		}
 
 		if (!strcmp(token, "yv"))
 		{
 			token = COM_Parse(&s);
-			y = viddef.height / 2 - scale*120 + scale*(int)strtol(token, (char **)NULL, 10);
+			y = scr_vrect.height / 2 - scale*120 + scale*(int)strtol(token, (char **)NULL, 10);
 			continue;
 		}
 
@@ -1138,9 +1138,9 @@ SCR_ExecuteLayoutString(char *s)
 			int score, ping, time;
 
 			token = COM_Parse(&s);
-			x = viddef.width / 2 - scale*160 + scale*(int)strtol(token, (char **)NULL, 10);
+			x = scr_vrect.x + scr_vrect.width / 2 - scale*160 + scale*(int)strtol(token, (char **)NULL, 10);
 			token = COM_Parse(&s);
-			y = viddef.height / 2 - scale*120 + scale*(int)strtol(token, (char **)NULL, 10);
+			y = scr_vrect.height / 2 - scale*120 + scale*(int)strtol(token, (char **)NULL, 10);
 			SCR_AddDirtyPoint(x, y);
 			SCR_AddDirtyPoint(x + scale*159, y + scale*31);
 
@@ -1185,9 +1185,9 @@ SCR_ExecuteLayoutString(char *s)
 			char block[80];
 
 			token = COM_Parse(&s);
-			x = viddef.width / 2 - scale*160 + scale*(int)strtol(token, (char **)NULL, 10);
+			x = scr_vrect.x + scr_vrect.width / 2 - scale*160 + scale*(int)strtol(token, (char **)NULL, 10);
 			token = COM_Parse(&s);
-			y = viddef.height / 2 - scale*120 + scale*(int)strtol(token, (char **)NULL, 10);
+			y = scr_vrect.height / 2 - scale*120 + scale*(int)strtol(token, (char **)NULL, 10);
 			SCR_AddDirtyPoint(x, y);
 			SCR_AddDirtyPoint(x + scale*159, y + scale*31);
 
@@ -1475,7 +1475,7 @@ SCR_UpdateScreen(void)
 			R_SetPalette(NULL);
 			scr_draw_loading = false;
 			Draw_GetPicSize(&w, &h, "loading");
-			Draw_PicScaled((viddef.width - w * scale) / 2, (viddef.height - h * scale) / 2, "loading", scale);
+			Draw_PicScaled(scr_vrect.x + (scr_vrect.width - w * scale) / 2, (scr_vrect.height - h * scale) / 2, "loading", scale);
 		}
 
 		/* if a cinematic is supposed to be running,
@@ -1549,7 +1549,7 @@ SCR_UpdateScreen(void)
 			{
 				char s[8];
 				sprintf(s, "%3.0ffps", 1 / cls.frametime);
-				DrawString(viddef.width - 64, 0, s);
+				DrawString(scr_vrect.width - 64, 0, s);
 			}
 
 			if (scr_timegraph->value)
@@ -1618,8 +1618,8 @@ SCR_DrawCrosshair(void)
 float
 SCR_GetScale(void)
 {
-	int i = viddef.width / 640;
-	int j = viddef.height / 240;
+	int i = scr_vrect.width / 640;
+	int j = scr_vrect.height / 240;
 
 	if (i > j)
 	{
