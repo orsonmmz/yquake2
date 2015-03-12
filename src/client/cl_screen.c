@@ -366,8 +366,8 @@ SCR_AdjustStereo(int frame)
 	int margin = margin_x > margin_y ? margin_x : margin_y;
 
 	scr_vrect.width >>= 1;
-	scr_vrect.x += margin + frame * scr_vrect.width;
-	scr_vrect.width -= 2 * margin;
+	scr_vrect.x += frame * (scr_vrect.width + margin);
+	scr_vrect.width -= margin;
 
 	scr_vrect.y += margin;
 	scr_vrect.height -= 2 * margin;
