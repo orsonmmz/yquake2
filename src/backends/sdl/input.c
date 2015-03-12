@@ -29,6 +29,7 @@
 #include "../../client/header/keyboard.h"
 #include "../generic/header/input.h"
 #include "../../client/header/client.h"
+#include "imu.h"
 
 /* There's no sdl-config on OS X and Windows */
 #if defined(_WIN32) || defined(__APPLE__)
@@ -66,7 +67,7 @@
 
 #define MOUSE_MAX 3000
 #define MOUSE_MIN 40
- 
+
 /* Globals */
 static int mouse_x, mouse_y;
 static int old_mouse_x, old_mouse_y;
@@ -444,7 +445,7 @@ IN_Update(void)
 				}
 
 				break;
-		} 
+		}
 	}
 
 	/* Grab and ungrab the mouse if the* console or the menu is opened */
@@ -457,7 +458,7 @@ IN_Update(void)
 		have_grab = want_grab;
 	}
 }
- 
+
 /*
  * Move handling
  */
@@ -536,8 +537,10 @@ IN_Move(usercmd_t *cmd)
 
 		mouse_x = mouse_y = 0;
 	}
+
+	imu_update(&cl.viewangles[YAW], &cl.viewangles[PITCH], &cl.viewangles[ROLL]);
 }
- 
+
 /* ------------------------------------------------------------------ */
 
 /*
@@ -597,6 +600,7 @@ IN_Init(void)
 #else
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 #endif
+        imu_init();
 
 	Com_Printf("------------------------------------\n\n");
 }

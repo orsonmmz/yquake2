@@ -616,6 +616,7 @@ CLIENT_OBJS_ := \
  	src/backends/generic/qgl.o \
 	src/backends/sdl/cd.o \
 	src/backends/sdl/input.o \
+	src/backends/sdl/imu.o \
 	src/backends/sdl/refresh.o \
 	src/backends/sdl/sound.o \
 	src/client/cl_cin.o \
