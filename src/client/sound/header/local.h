@@ -217,60 +217,6 @@ void S_BuildSoundList(int *sounds);
 
 /* ----------------------------------------------------------------- */
 
-/*
- * Initalizes the SDL backend
- */
-qboolean SDL_BackendInit(void);
-
-/*
- * Shuts the SDL backend down
- */
-void SDL_BackendShutdown(void);
-
-/*
- * Print informations about
- * the SDL backend
- */
-void SDL_SoundInfo(void);
-
-/*
- * Alters start position of
- * sound playback
- */
-int  SDL_DriftBeginofs(float);
-
-/*
- * Clears all playback buffers
- */
-void SDL_ClearBuffer(void);
-
-/*
- * Caches an sample for use
- * the SDL backend
- */
-qboolean SDL_Cache(sfx_t *sfx, wavinfo_t *info, byte *data);
-
-/*
- * Performs all sound calculations
- * for the SDL backendend and fills
- * the buffer
- */
-void SDL_Update(void);
-
-/*
- * Queues raw samples for
- * playback
- */
-void SDL_RawSamples(int samples, int rate, int width,
-		int channels, byte *data, float volume);
-
-/*
- * Spartializes a sample
- */
-void SDL_Spatialize(channel_t *ch);
-
-/* ----------------------------------------------------------------- */
-
 #if USE_OPENAL
 
  /* Only begin attenuating sound volumes

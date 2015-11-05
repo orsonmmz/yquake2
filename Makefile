@@ -32,34 +32,28 @@
 # for the background music and doesn't add any further
 # dependencies. It should work on all platforms where
 # CD playback is supported by SDL.
-WITH_CDA:=yes
+WITH_CDA:=no
 
 # Enables OGG/Vorbis support. OGG/Vorbis files can be
 # used as a substitute of CD audio playback. Adds
 # dependencies to libogg, libvorbis and libvorbisfile.
-WITH_OGG:=yes
+WITH_OGG:=no
 
 # Enables the optional OpenAL sound system.
 # To use it your system needs libopenal.so.1
 # or openal32.dll (we recommend openal-soft)
 # installed
-WITH_OPENAL:=yes
+WITH_OPENAL:=no
 
 # Enables retexturing support. Adds
 # a dependency to libjpeg
-WITH_RETEXTURING:=yes
-
-# Use SDL2 instead of SDL1.2. Disables CD audio support,
-# because SDL2 has none. Use OGG/Vorbis music instead :-)
-# On Windows sdl-config isn't used, so make sure that
-# you've got the SDL2 headers and libs installed.
-WITH_SDL2:=yes
+WITH_RETEXTURING:=no
 
 # Set the gamma via X11 and not via SDL. This works
 # around problems in some SDL version. Adds dependencies
 # to pkg-config, libX11 and libXxf86vm. Unsupported on
 # Windows and OS X.
-WITH_X11GAMMA:=no
+WITH_X11GAMMA:=yes
 
 # Enables opening of ZIP files (also known as .pk3 paks).
 # Adds a dependency to libz
@@ -128,18 +122,6 @@ ifeq ($(findstring $(ARCH), i386 x86_64 sparc64 ia64),)
 $(error arch $(ARCH) is currently not supported)
 endif
 
-# Disable CDA for SDL2
-ifeq ($(WITH_SDL2),yes)
-ifeq ($(WITH_CDA),yes)
-WITH_CDA:=no
-
-# Evil hack to tell the "all" target
-# that CDA was disabled because SDL2
-# is enabled.
-CDA_DISABLED:=yes
-endif
-endif
-
 # ----------
 
 # Base CFLAGS.
@@ -188,27 +170,6 @@ endif
 
 # ----------
 
-# Extra CFLAGS for SDL
-ifeq ($(OSTYPE), Darwin)
-SDLCFLAGS :=
-else # not darwin
-ifeq ($(WITH_SDL2),yes)
-ifeq ($(OSTYPE),Windows)
-SDLCFLAGS := $(shell /custom/bin/sdl2-config --cflags)
-else
-SDLCFLAGS := $(shell sdl2-config --cflags)
-endif
-else # not SDL2
-ifeq ($(OSTYPE),Windows)
-SDLCFLAGS :=
-else
-SDLCFLAGS := $(shell sdl-config --cflags)
-endif
-endif # SDL2
-endif # darwin's else
-
-# ----------
-
 # Extra CFLAGS for X11
 ifneq ($(OSTYPE), Windows)
 ifneq ($(OSTYPE), Darwin)
@@ -222,55 +183,34 @@ endif
 # ----------
 
 # Base include path.
+INCLUDE := -ITinyGL/include
 ifeq ($(OSTYPE),Linux)
-INCLUDE := -I/usr/include
+INCLUDE += -I/usr/include
 else ifeq ($(OSTYPE),FreeBSD)
-INCLUDE := -I/usr/local/include
+INCLUDE += -I/usr/local/include
 else ifeq ($(OSTYPE),OpenBSD)
-INCLUDE := -I/usr/local/include
+INCLUDE += -I/usr/local/include
 else ifeq ($(OSTYPE),Darwin)
-INCLUDE :=
+INCLUDE +=
 else ifeq ($(OSTYPE),Windows)
-INCLUDE := -I/custom/include
+INCLUDE += -I/custom/include
 endif
 
 # ----------
 
 # Base LDFLAGS.
+LDFLAGS := -LTinyGL/lib -lTinyGL
 ifeq ($(OSTYPE),Linux)
-LDFLAGS := -L/usr/lib -lm -ldl -rdynamic
+LDFLAGS +=  -L/usr/lib -lm -ldl -rdynamic
 else ifeq ($(OSTYPE),FreeBSD)
-LDFLAGS := -L/usr/local/lib -lm
+LDFLAGS += -L/usr/local/lib -lm
 else ifeq ($(OSTYPE),OpenBSD)
-LDFLAGS := -L/usr/local/lib -lm
+LDFLAGS += -L/usr/local/lib -lm
 else ifeq ($(OSTYPE),Windows)
-LDFLAGS := -L/custom/lib -static -lws2_32 -lwinmm
+LDFLAGS += -L/custom/lib -static -lws2_32 -lwinmm
 else ifeq ($(OSTYPE), Darwin)
-LDFLAGS := $(OSX_ARCH) -lm
+LDFLAGS += $(OSX_ARCH) -lm
 endif
-
-# ----------
-
-# Extra LDFLAGS for SDL
-ifeq ($(OSTYPE), Windows)
-ifeq ($(WITH_SDL2),yes)
-SDLLDFLAGS := $(shell /custom/bin/sdl2-config --static-libs) 
-else # not SDL2
-SDLLDFLAGS := -lSDL
-endif # SDL2
-else ifeq ($(OSTYPE), Darwin)
-ifeq ($(WITH_SDL2),yes)
-SDLLDFLAGS := -framework SDL2 -framework OpenGL -framework Cocoa
-else # not SDL2
-SDLLDFLAGS := -framework SDL -framework OpenGL -framework Cocoa
-endif # SDL2
-else # not Darwin/Win
-ifeq ($(WITH_SDL2),yes)
-SDLLDFLAGS := $(shell sdl2-config --libs)
-else # not SDL2
-SDLLDFLAGS := $(shell sdl-config --libs)
-endif # SDL2
-endif # Darwin/Win
 
 # ----------
 
@@ -313,20 +253,13 @@ config:
 	@echo "WITH_CDA = $(WITH_CDA)"
 	@echo "WITH_OPENAL = $(WITH_OPENAL)"
 	@echo "WITH_RETEXTURING = $(WITH_RETEXTURING)"
-	@echo "WITH_SDL2 = $(WITH_SDL2)"
 	@echo "WITH_X11GAMMA = $(WITH_X11GAMMA)"
 	@echo "WITH_ZIP = $(WITH_ZIP)"
 	@echo "WITH_SYSTEMWIDE = $(WITH_SYSTEMWIDE)"
 	@echo "WITH_SYSTEMDIR = $(WITH_SYSTEMDIR)"
 	@echo "============================"
 	@echo ""
-ifeq ($(WITH_SDL2),yes)
-ifeq ($(CDA_DISABLED),yes)
-	@echo "WARNING: CDA disabled because SDL2 doesn't support it!"
-	@echo ""
-endif
-endif
-	
+
 # ----------
 
 # Special target to compile
@@ -357,7 +290,7 @@ client:
 build/client/%.o: %.c
 	@echo "===> CC $<"
 	${Q}mkdir -p $(@D)
-	${Q}$(CC) -c $(CFLAGS) $(SDLCFLAGS) $(INCLUDE) -o $@ $<
+	${Q}$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $<
 
 ifeq ($(WITH_CDA),yes)
 release/quake2.exe : CFLAGS += -DCDA
@@ -382,10 +315,6 @@ release/quake2.exe : CFLAGS += -DRETEXTURE
 release/quake2.exe : LDFLAGS += -ljpeg
 endif 
 
-ifeq ($(WITH_SDL2),yes)
-release/quake2.exe : CFLAGS += -DSDL2
-endif
-
 release/quake2.exe : LDFLAGS += -mwindows -lopengl32
 else
 client:
@@ -396,7 +325,7 @@ client:
 build/client/%.o: %.c
 	@echo "===> CC $<"
 	${Q}mkdir -p $(@D)
-	${Q}$(CC) -c $(CFLAGS) $(SDLCFLAGS) $(X11CFLAGS) $(INCLUDE) -o $@ $<
+	${Q}$(CC) -c $(CFLAGS) $(X11CFLAGS) $(INCLUDE) -o $@ $<
 
 ifeq ($(OSTYPE), Darwin)
 build/client/%.o : %.m
@@ -447,18 +376,10 @@ release/quake2 : LDFLAGS += -ljpeg
 endif
 endif
 
-ifeq ($(WITH_SDL2),yes)
-release/quake2 : CFLAGS += -DSDL2
-endif
- 
 ifeq ($(OSTYPE), Darwin)
 ifeq ($(OSX_APP), yes)
 release/quake2 : LDFLAGS += -Xlinker -rpath -Xlinker @loader_path/../Frameworks
 endif
-endif
- 
-ifneq ($(OSTYPE), Darwin)
-release/quake2 : LDFLAGS += -lGL
 endif
 
 ifeq ($(OSTYPE), FreeBSD)
@@ -783,12 +704,12 @@ GAME_DEPS= $(GAME_OBJS:.o=.d)
 ifeq ($(OSTYPE), Windows)
 release/quake2.exe : $(CLIENT_OBJS) icon
 	@echo "===> LD $@"
-	${Q}$(CC) build/icon/icon.res $(CLIENT_OBJS) $(LDFLAGS) $(SDLLDFLAGS) -o $@
+	${Q}$(CC) build/icon/icon.res $(CLIENT_OBJS) $(LDFLAGS) -o $@
 	$(Q)strip $@
 else
 release/quake2 : $(CLIENT_OBJS)
 	@echo "===> LD $@"
-	${Q}$(CC) $(CLIENT_OBJS) $(LDFLAGS) $(SDLLDFLAGS) $(X11LDFLAGS) -o $@
+	${Q}$(CC) $(CLIENT_OBJS) $(LDFLAGS) $(X11LDFLAGS) -o $@
 endif
 
 # release/q2ded

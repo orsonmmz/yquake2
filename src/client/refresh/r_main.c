@@ -1034,7 +1034,7 @@ R_SetMode(void)
 	rserr_t err;
 	qboolean fullscreen;
 
-	fullscreen = vid_fullscreen->value;
+	fullscreen = false; //vid_fullscreen->value;
 
 	vid_fullscreen->modified = false;
 	gl_mode->modified = false;
@@ -1146,6 +1146,7 @@ R_Init(void *hinstance, void *hWnd)
 	VID_MenuInit();
 
 	/* get our various GL strings */
+        /*
 	VID_Printf(PRINT_ALL, "\nOpenGL setting:\n", gl_config.vendor_string);
 	gl_config.vendor_string = (char *)glGetString(GL_VENDOR);
 	VID_Printf(PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string);
@@ -1161,12 +1162,14 @@ R_Init(void *hinstance, void *hWnd)
 
 	Q_strlcpy(vendor_buffer, gl_config.vendor_string, sizeof(vendor_buffer));
 	Q_strlwr(vendor_buffer);
+        */
 
 	Cvar_Set("scr_drawall", "0");
 	gl_config.allow_cds = true;
 
 	VID_Printf(PRINT_ALL, "\n\nProbing for OpenGL extensions:\n");
 
+#if 0
 	/* grab extensions */
 	if (strstr(gl_config.extensions_string, "GL_EXT_compiled_vertex_array"))
 	{
@@ -1300,6 +1303,7 @@ R_Init(void *hinstance, void *hWnd)
 			VID_Printf(PRINT_ALL, "...GL_EXT_texture_env_combine not found\n");
 		}
 	}
+#endif
 
 	R_SetDefaultState();
 

@@ -41,16 +41,6 @@
 #include <GL/gl.h>
 #endif
 
-#if defined(_WIN32) || defined(__APPLE__)
-#ifdef SDL2
-#include <SDL2/SDL.h>
-#else // SDL1.2
-#include <SDL/SDL.h>
-#endif //SDL2
-#else // not _WIN32 || APPLE
-#include <SDL.h>
-#endif // _WIN32 || APPLE
-
 /* The window icon */
 #include "icon/q2icon.xbm"
 
@@ -61,17 +51,9 @@
  #include <X11/Xutil.h>
  #include <X11/extensions/xf86vmode.h>
  #include <X11/extensions/Xrandr.h>
-
- #include <SDL_syswm.h>
 #endif
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-extern qboolean in_relativemode;
-SDL_Window* window = NULL;
-SDL_GLContext context = NULL;
-#else
-SDL_Surface* window = NULL;
-#endif
+#include <stdint.h>
 
 qboolean have_stencil = false;
 
@@ -80,20 +62,15 @@ XRRCrtcGamma** gammaRamps = NULL;
 int noGammaRamps = 0;
 #endif
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-// some compatibility defines
-#define SDL_SRCCOLORKEY SDL_TRUE
-#define SDL_FULLSCREEN SDL_WINDOW_FULLSCREEN
-#define SDL_OPENGL SDL_WINDOW_OPENGL
-
-#endif
-
 /*
  * Initialzes the SDL OpenGL context
  */
 int
 GLimp_Init(void)
 {
+    // TODO orson
+
+#if 0
 	if (!SDL_WasInit(SDL_INIT_VIDEO))
 	{
 
@@ -111,6 +88,7 @@ GLimp_Init(void)
 #endif
 		VID_Printf(PRINT_ALL, "SDL video driver is \"%s\".\n", driverName);
 	}
+#endif
 
 	return true;
 }
@@ -121,80 +99,17 @@ GLimp_Init(void)
 void *
 GLimp_GetProcAddress (const char* proc)
 {
-	return SDL_GL_GetProcAddress ( proc );
-}
+    // TODO orson
+    return NULL;
 
-/*
- * Sets the window icon
- */
-static void
-SetSDLIcon()
-{
-	SDL_Surface *icon;
-	SDL_Color transColor, solidColor;
-	Uint8 *ptr;
-	int i;
-	int mask;
-
-	icon = SDL_CreateRGBSurface(SDL_SWSURFACE,
-			q2icon_width, q2icon_height, 8,
-			0, 0, 0, 0);
-
-	if (icon == NULL)
-	{
-		return;
-	}
-
-	SDL_SetColorKey(icon, SDL_SRCCOLORKEY, 0);
-
-	transColor.r = 255;
-	transColor.g = 255;
-	transColor.b = 255;
-
-	solidColor.r = 0;
-	solidColor.g = 16;
-	solidColor.b = 0;
-
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-	// only SDL2 has alphas there and they must be set apparently
-	transColor.a = 0;
-	solidColor.a = 255;
-
-	SDL_Palette* palette = SDL_AllocPalette(256);
-	SDL_SetPaletteColors(palette, &transColor, 0, 1);
-	SDL_SetPaletteColors(palette, &solidColor, 1, 1);
-
-	SDL_SetSurfacePalette(icon, palette);
-#else
-	SDL_SetColors(icon, &transColor, 0, 1);
-	SDL_SetColors(icon, &solidColor, 1, 1);
-#endif
-
-	ptr = (Uint8 *)icon->pixels;
-
-	for (i = 0; i < sizeof(q2icon_bits); i++)
-	{
-		for (mask = 1; mask != 0x100; mask <<= 1)
-		{
-			*ptr = (q2icon_bits[i] & mask) ? 1 : 0;
-			ptr++;
-		}
-	}
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-	SDL_SetWindowIcon(window, icon);
-	SDL_FreePalette(palette);
-#else
-	SDL_WM_SetIcon(icon, NULL);
-#endif
-
-	SDL_FreeSurface(icon);
+    /*return SDL_GL_GetProcAddress ( proc );*/
 }
 
 /*
  *  from SDL2 SDL_CalculateGammaRamp, adjusted for arbitrary ramp sizes
  *  because xrandr seems to support ramp sizes != 256 (in theory at least)
  */
-void CalculateGammaRamp(float gamma, Uint16* ramp, int len)
+void CalculateGammaRamp(float gamma, uint16_t* ramp, int len)
 {
     int i;
 
@@ -227,7 +142,7 @@ void CalculateGammaRamp(float gamma, Uint16* ramp, int len)
             if (value > 65535) {
                 value = 65535;
             }
-            ramp[i] = (Uint16) value;
+            ramp[i] = (uint16_t) value;
         }
     }
 }
@@ -235,14 +150,16 @@ void CalculateGammaRamp(float gamma, Uint16* ramp, int len)
 /*
  * Sets the hardware gamma
  */
-#ifdef X11GAMMA
 void
 UpdateHardwareGamma(void)
 {
 	float gamma = (vid_gamma->value);
 	int i;
 
+#if 0
 	Display* dpy = NULL;
+
+        // TODO orson
 	SDL_SysWMinfo info;
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
@@ -292,68 +209,30 @@ UpdateHardwareGamma(void)
 	}
 
 	XRRFreeScreenResources(res);
-}
-#else // no X11GAMMA
-void
-UpdateHardwareGamma(void)
-{
-	float gamma = (vid_gamma->value);
-
-	Uint16 ramp[256];
-	CalculateGammaRamp(gamma, ramp, 256);
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-	if(SDL_SetWindowGammaRamp(window, ramp, ramp, ramp) != 0) {
-#else
-	if(SDL_SetGammaRamp(ramp, ramp, ramp) < 0) {
 #endif
-		VID_Printf(PRINT_ALL, "Setting gamma failed: %s\n", SDL_GetError());
-	}
 }
-#endif // X11GAMMA
 
 static qboolean IsFullscreen()
 {
+    // TODO orson
+#if 0
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	return !!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN);
 #else
 	return !!(window->flags & SDL_FULLSCREEN);
 #endif
-}
-
-static qboolean CreateSDLWindow(int flags)
-{
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-	int windowPos = SDL_WINDOWPOS_UNDEFINED;
-	// TODO: support fullscreen on different displays with SDL_WINDOWPOS_UNDEFINED_DISPLAY(displaynum)
-	window = SDL_CreateWindow("Yamagi Quake II", windowPos, windowPos,
-	                          vid.width, vid.height, flags);
-
-	if(window == NULL)
-	{
-		return false;
-	}
-
-	context = SDL_GL_CreateContext(window);
-	if(context == NULL)
-	{
-		SDL_DestroyWindow(window);
-		window = NULL;
-		return false;
-	}
-
-	return true;
-#else
-	window = SDL_SetVideoMode(vid.width, vid.height, 0, flags);
-	SDL_EnableUNICODE(SDL_TRUE);
-	return window != NULL;
 #endif
+        return false;
 }
 
 static qboolean GetWindowSize(int* w, int* h)
 {
+// TODO orson
+*w = 320; *h = 200;
+
+#if 0
 	if(window == NULL || w == NULL || h == NULL)
 		return false;
-
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	SDL_DisplayMode m;
 	if(SDL_GetWindowDisplayMode(window, &m) != 0)
@@ -367,12 +246,15 @@ static qboolean GetWindowSize(int* w, int* h)
 	*w = window->w;
 	*h = window->h;
 #endif
+#endif
 
 	return true;
 }
 
 static void InitGamma()
 {
+// TODO orson
+#if 0
 #ifdef X11GAMMA
 	int i=0;
 	SDL_SysWMinfo info;
@@ -380,7 +262,6 @@ static void InitGamma()
 
 	if(gammaRamps != NULL) // already saved gamma
 		return;
-
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	SDL_VERSION(&info.version);
 	if(!SDL_GetWindowWMInfo(window, &info))
@@ -431,68 +312,14 @@ static void InitGamma()
 #else
 	VID_Printf(PRINT_ALL, "Using hardware gamma via SDL.\n");
 #endif
+#endif
 	gl_state.hwgamma = true;
 	vid_gamma->modified = true;
 }
 
-#ifdef X11GAMMA
 static void RestoreGamma()
 {
-	int i=0;
-	SDL_SysWMinfo info;
-	Display* dpy = NULL;
-
-	if(gammaRamps == NULL)
-			return;
-
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-	SDL_VERSION(&info.version);
-	if(!SDL_GetWindowWMInfo(window, &info))
-#else
-	if(SDL_GetWMInfo(&info) != 1)
-#endif
-	{
-		VID_Printf(PRINT_ALL, "Couldn't get Window info from SDL\n");
-		return;
-	}
-
-	dpy = info.info.x11.display;
-
-	XRRScreenResources* res = XRRGetScreenResources(dpy, info.info.x11.window);
-	if(res == NULL)
-	{
-		VID_Printf(PRINT_ALL, "Unable to get xrandr screen resources.\n");
-		return;
-	}
-
-	for(i=0; i < noGammaRamps; ++i)
-	{
-		// in case a display was unplugged or something, noGammaRamps may be > res->ncrtc
-		if(i < res->ncrtc)
-		{
-			int len = XRRGetCrtcGammaSize(dpy, res->crtcs[i]);
-			if(len != gammaRamps[i]->size) {
-				VID_Printf(PRINT_ALL, "WTF, gamma ramp size for display %d has changed from %d to %d!\n",
-							   i, gammaRamps[i]->size, len);
-
-				continue;
-			}
-
-			XRRSetCrtcGamma(dpy, res->crtcs[i], gammaRamps[i]);
-		}
-
-		// the ramp needs to be free()d either way
-		XRRFreeGamma(gammaRamps[i]);
-		gammaRamps[i] = NULL;
-
-	}
-	XRRFreeScreenResources(res);
-	free(gammaRamps);
-	gammaRamps = NULL;
-
-	VID_Printf(PRINT_ALL, "Restored original Gamma\n");
 }
-#endif // X11GAMMA
 
 /*
  * Initializes the OpenGL window
@@ -521,6 +348,8 @@ GLimp_InitGraphics(qboolean fullscreen)
 		}
 	}
 
+// TODO orson
+#if 0
 	/* Is the surface used? */
 	if (window)
 	{
@@ -531,10 +360,13 @@ GLimp_InitGraphics(qboolean fullscreen)
 		SDL_FreeSurface(window);
 #endif
 	}
+#endif
 
 	/* Create the window */
 	VID_NewWindow(vid.width, vid.height);
 
+// TODO orson
+#if 0
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -629,16 +461,6 @@ GLimp_InitGraphics(qboolean fullscreen)
 		}
 	}
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-	/* For SDL2, these things must be done after creating the window */
-
-	/* Set the icon */
-	SetSDLIcon();
-
-	/* Set vsync - TODO: -1 could be set for "late swap tearing" */
-	SDL_GL_SetSwapInterval(gl_swapinterval->value ? 1 : 0);
-#endif
-
 	/* Initialize the stencil buffer */
 	if (!SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencil_bits))
 	{
@@ -649,10 +471,13 @@ GLimp_InitGraphics(qboolean fullscreen)
 			have_stencil = true;
 		}
 	}
+#endif
 
 	/* Initialize hardware gamma */
 	InitGamma();
 
+// TODO orson
+#if 0
 	/* Window title */
 	snprintf(title, sizeof(title), "Yamagi Quake II %s", YQ2VERSION);
 #if SDL_VERSION_ATLEAST(2, 0, 0)
@@ -663,6 +488,7 @@ GLimp_InitGraphics(qboolean fullscreen)
 
 	/* No cursor */
 	SDL_ShowCursor(0);
+#endif
 
 	return true;
 }
@@ -673,10 +499,13 @@ GLimp_InitGraphics(qboolean fullscreen)
 void
 GLimp_EndFrame(void)
 {
+// TODO orson
+#if 0
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	SDL_GL_SwapWindow(window);
 #else
 	SDL_GL_SwapBuffers();
+#endif
 #endif
 }
 
@@ -711,6 +540,8 @@ GLimp_SetMode(int *pwidth, int *pheight, int mode, qboolean fullscreen)
  */
 void GLimp_ToggleFullscreen(void)
 {
+// TODO orson
+#if 0
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	int wantFullscreen = !IsFullscreen();
 
@@ -728,6 +559,7 @@ void GLimp_ToggleFullscreen(void)
 		Cvar_SetValue("vid_fullscreen", 0);
 	}
 #endif
+#endif
 	vid_fullscreen->modified = false;
 }
 
@@ -736,12 +568,15 @@ void GLimp_ToggleFullscreen(void)
  */
 void GLimp_GrabInput(qboolean grab)
 {
+// TODO orson
+#if 0
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	SDL_SetWindowGrab(window, grab ? SDL_TRUE : SDL_FALSE);
 	SDL_SetRelativeMouseMode(grab ? SDL_TRUE : SDL_FALSE);
 	in_relativemode = (SDL_GetRelativeMouseMode() == SDL_TRUE);
 #else
 	SDL_WM_GrabInput(grab ? SDL_GRAB_ON : SDL_GRAB_OFF);
+#endif
 #endif
 }
 
@@ -750,10 +585,13 @@ void GLimp_GrabInput(qboolean grab)
  */
 qboolean GLimp_InputIsGrabbed()
 {
+// TODO orson
+#if 0
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	return SDL_GetWindowGrab(window) ? true : false;
 #else
 	return (SDL_WM_GrabInput(SDL_GRAB_QUERY) == SDL_GRAB_ON);
+#endif
 #endif
 }
 
@@ -768,17 +606,22 @@ GLimp_Shutdown(void)
 	   video drivers like the AMD Catalyst
 	   to avoid artifacts in unused screen
 	   areas. */
+// TODO orson
+#if 0
 	if (SDL_WasInit(SDL_INIT_VIDEO))
 	{
 		glClearColor(0.0, 0.0, 0.0, 0.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		GLimp_EndFrame();
 	}
+#endif
 
 #ifdef X11GAMMA
 	RestoreGamma();
 #endif
 
+// TODO orson
+#if 0
 	if (window)
 	{
 #if SDL_VERSION_ATLEAST(2, 0, 0)
@@ -804,6 +647,7 @@ GLimp_Shutdown(void)
 	{
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	}
+#endif
 
 	gl_state.hwgamma = false;
 }

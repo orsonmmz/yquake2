@@ -145,19 +145,7 @@ S_LoadSound(sfx_t *s)
 	{
 		sc = AL_UploadSfx(s, &info, data + info.dataofs);
 	}
-	else
 #endif
-	{
-		if (sound_started == SS_SDL)
-		{
-			if (!SDL_Cache(s, &info, data + info.dataofs))
-			{
-				Com_Printf("Pansen!\n");
-				FS_FreeFile(data);
-				return NULL;
-			}
-		}
-	}
 
 	FS_FreeFile(data);
 	return sc;
@@ -591,15 +579,7 @@ S_IssuePlaysound(playsound_t *ps)
 		ch->oal_vol = ps->volume * (s_volume->value);
 		AL_PlayChannel(ch);
 	}
-	else
 #endif
-	{
-		if (sound_started == SS_SDL)
-		{
-			ch->master_vol = (int)ps->volume;
-			SDL_Spatialize(ch);
-		}
-	}
 
 	ch->pos = 0;
 	ch->end = paintedtime + sc->length;
@@ -679,15 +659,7 @@ S_StartSound(vec3_t origin, int entnum, int entchannel, sfx_t *sfx,
 		ps->begin = paintedtime + timeofs * 1000;
 		ps->volume = fvol;
 	}
-	else
 #endif
-	{
-		if (sound_started == SS_SDL)
-		{
-			ps->begin = SDL_DriftBeginofs(timeofs);
-			ps->volume = fvol * 255;
-		}
-	}
 
 	/* sort into the pending sound list */
 	for (sort = s_pendingplays.next;
@@ -760,14 +732,7 @@ S_StopAllSounds(void)
 	{
 		AL_StopAllChannels();
 	}
-	else
 #endif
-	{
-		if (sound_started == SS_SDL)
-		{
-			SDL_ClearBuffer();
-		}
-	}
 
 	/* clear all the channels */
 	memset(channels, 0, sizeof(channels));
@@ -833,14 +798,7 @@ S_RawSamples(int samples, int rate, int width,
 		volume = volume * (s_volume->value);
 		AL_RawSamples(samples, rate, width, channels, data, volume);
 	}
-	else
 #endif
-	{
-		if (sound_started == SS_SDL)
-		{
-			SDL_RawSamples(samples, rate, width, channels, data, volume);
-		}
-	}
 }
 
 /*
@@ -867,14 +825,7 @@ S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	{
 		AL_Update();
 	}
-	else
 #endif
-	{
-		if (sound_started == SS_SDL)
-		{
-			SDL_Update();
-		}
-	}
 }
 
 /*
@@ -985,11 +936,7 @@ S_SoundInfo_f(void)
 	{
 		QAL_SoundInfo();
 	}
-	else
 #endif
-	{
-		SDL_SoundInfo();
-	}
 }
 
 /*
@@ -1041,15 +988,8 @@ S_Init(void)
 	else
 #endif
 	{
-		if (SDL_BackendInit())
-		{
-			sound_started = SS_SDL;
-		}
-		else
-		{
-			sound_started = SS_NOT;
-			return;
-		}
+                sound_started = SS_NOT;
+                return;
 	}
 
 	num_sfx = 0;
@@ -1120,15 +1060,7 @@ S_Shutdown(void)
 	{
 		AL_Shutdown();
 	}
-	else
 #endif
-	{
-		if (sound_started == SS_SDL)
-		{
-			SDL_BackendShutdown();
-		}
-	}
-
 	sound_started = SS_NOT;
 	s_numchannels = 0;
 
